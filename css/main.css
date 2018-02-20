@@ -12,8 +12,8 @@
 
 html {
     color: #222;
-    font-size: 1em;
-    line-height: 2.4;
+    font-size: 2em;
+    line-height: 1.4;
 }
 
 /*
@@ -89,13 +89,14 @@ textarea {
 .browserupgrade {
     margin: 0.2em 0;
     background: #ccc;
-    color: #000;
+    color: #333;
     padding: 0.2em 0;
 }
 
 /* ==========================================================================
    Author's custom styles
    ========================================================================== */
+
 
 
 
