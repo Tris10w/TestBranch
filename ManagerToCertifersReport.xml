@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE sailpoint PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<sailpoint>
+	<TaskDefinition executor="sailpoint.reporting.LiveReportExecutor"
+		name="Active-Manager-Certifer-Report" progressMode="Percentage"
+		resultAction="Rename" subType="Custom Reports" template="true" type="LiveReport">
+		<Attributes>
+			<Map>
+				<entry key="report">
+					<value>
+						<LiveReport title="Active-Manager-Certifer-Report">
+							<DataSource objectType="sailpoint.object.Identity"
+								type="Filter">
+								<QueryParameters>
+									<Parameter property="manager_name" defaultValue="All Managers"
+										valueClass="string" argument="manager_name">
+										<QueryScript>
+											<Source>
+												import sailpoint.object.Filter;
+												import sailpoint.object.QueryOptions;
+												import sailpoint.object.QueryOptions.Ordering;
+
+												QueryOptions qo = new QueryOptions();
+												qo.addFilter(Filter.eq("managerStatus", true));
+												qo.addFilter(Filter.eq("inactive", false));
+												qo.setOrderBy("name");
+
+												return qo;
+											</Source>
+										</QueryScript>
+									</Parameter>
+									<!--<Parameter defaultValue="business" property="type" valueClass="string"/> -->
+								</QueryParameters>
+							</DataSource>
+							<ReportForm>
+								<Reference class="sailpoint.object.Form" name="Manager to Certifer - Report Form" />
+							</ReportForm>
+							<Columns>
+								<ReportColumnConfig field="manager-name"
+									header="Name" property="name" sortable="true" width="110" />
+								<ReportColumnConfig field="manager-id"
+									header="Certifers" property="name" sortable="true" width="110">
+									<RenderScript>
+										<Source>
+										<![CDATA[
+											import sailpoint.api.SailPointContext;
+											import sailpoint.object.CertificationDefinition;
+											import sailpoint.object.QueryOptions;
+											import sailpoint.object.Filter;
+											import sailpoint.object.Identity;
+											import sailpoint.object.GroupDefinition;
+											import java.util.ArrayList;
+											import java.util.Iterator;
+		
+											CertificationDefinition delegatedCert;
+									
+											// Find Certificatoin
+											QueryOptions qo = new QueryOptions();
+											qo.addFilter(Filter.eq("tags.name","test"));
+											List certs = context.getObjects(CertificationDefinition.class,
+											qo);
+											
+											if (!certs.isEmpty()) {
+												Iterator iter = certs.iterator();
+												while (iter.hasNext()) {
+													CertificationDefinition cd = (CertificationDefinition)iter.next();
+													delegatedCert = cd;
+												}
+												iter.remove();
+											}											
+
+											if(delegatedCert == null){
+												return;
+											}
+											
+											Map map=new HashMap();
+											map = delegatedCert.getIpopCertifierMap();
+										
+									
+											List gdList = null;
+								
+											Filter f = Filter.eq("name", value);
+											QueryOptions qoGd = new QueryOptions();
+											qoGd.addFilter(f);
+											
+											gdList = context.getObjects(GroupDefinition.class, qoGd);
+
+											if(gdList == null || gdList.isEmpty()){
+												return;
+											}
+											
+											List tmpList = null;
+											for(GroupDefinition tmpGd : gdList) {
+											    tmpList = map.get(tmpGd.getId());
+												if(tmpList != null && !tmpList.isEmpty()){
+
+													break;
+												}
+													
+											}
+
+											if(tmpList == null){
+												return;
+											}
+											
+											String returnString = " ";
+																			
+											for(String str: tmpList){
+												Identity tmpIdn = context.getObjectById(Identity.class, str);
+												returnString +=  tmpIdn.getDisplayName() + " ";
+												context.decache(tmpIdn);
+									        }
+											
+											return returnString;
+									 ]]>
+										</Source>
+									</RenderScript>
+								</ReportColumnConfig>
+
+							</Columns>
+						</LiveReport>
+					</value>
+				</entry>
+			</Map>
+		</Attributes>
+		<Description>This report displays all the active managers and who is certifying</Description>
+
+		<Signature>
+			<Inputs>
+				<Argument name="manager_name" type="string">
+					<Description>Input for the different request types</Description>
+				</Argument>
+			</Inputs>
+		</Signature>
+	</TaskDefinition>
+
+	<Form name="Manager to Certifer - Report Form">
+		<Section label="Manager Properties" name="customProperties">
+			<Field displayName="Role Name (Starts With)"
+				helpKey="This filters Business Roles using a startsWith Search"
+				name="manager_name" type="string" value="ref:manager_name" />
+		</Section>
+	</Form>
+
+</sailpoint>
